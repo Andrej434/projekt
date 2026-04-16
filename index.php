@@ -1,76 +1,102 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="sk">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
-    <title>To do list</title>
-    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  <meta charset="UTF-8">
+  <title>Login stránka - Cookies úloha</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body class="px-5 py-5 m-3 border-0 bd-example border-0">
+<body class="bg-light">
+  <?php
+  $conn = mysqli_connect("localhost", "root", "root", "auth");
 
-    <header>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="exampleInputEmail1" class="form-label">Prihlasovacie Meno</label>
-                <input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" name="name">
-            </div>
-            <div class="mb-3">
-                <label for="exampleInputPassword1" class="form-label">Heslo</label>
-                <input type="password" class="form-control" id="exampleInputPassword1" name="password">
-            </div>
-            <button type="submit" class="btn btn-primary" name="login">Prihlásiť sa</button>
-        </form>
-        <?php
+  if(!$conn){
+    echo "Chyba pripojenia" . mysqli_connect_error();
+  }
+  ?>
 
-        /* Pripojenie na databázu*/
-        $conn = mysqli_connect("localhost", "root", "root", "php");
+<?php
 
+// LOGIN
+if (isset($_POST["login"])) {
+  $username = $_POST["username"];
+  $password = $_POST["password"]; 
 
-        if (isset($_POST["login"])) {
-            $name = $_POST["name"];
-            $password = $_POST["password"]; 
+  $sql = "SELECT * FROM user WHERE name = '$username' AND password = '$password'";
+  $result = mysqli_query($conn, $sql);
 
-            $sql1 = "SELECT Pouzivatel_id FROM pouzivatelia WHERE Meno = '$name' AND Heslo = '$password'";
-            $result1 = mysqli_query($conn, $sql1);
-            $sql2 = "SELECT poznamka FROM poznamky WHERE Pouzivatel_id = '$sql1'";
-            $result2 = mysqli_query($conn, $sql2);
-        }
+  if(mysqli_num_rows($result) == 1){
+    setcookie("logged", "1", time() + 3600);
+    header("Location: " . $_SERVER['PHP_SELF']);
+    exit();
+  }
+}
 
-        ?>
-    </header> <br>
-    <main>
-        <div>
-            <?php echo "Vytaj" . $name . "!"?> <br> <br>
+// LOGOUT
+if (isset($_POST["logout"])) {
+  setcookie("logged", "", time() - 3600);
+  header("Location: " . $_SERVER['PHP_SELF']);
+  exit();
+}
+?>
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+    
+    <h3 class="text-center mb-3">Prihlásenie používateľa</h3>
+    <p class="text-muted text-center">Použitie cookies</p>
+
+    <?php if (!isset($_COOKIE["logged"])){ ?>
+      
+      <!-- LOGIN FORM -->
+      <form method="post">
+        <div class="mb-3">
+          <label class="form-label">Používateľské meno</label>
+          <input type="text" class="form-control" name="username" required>
         </div>
-        <?php/*Poznamky*/?>
-        <form method="POST">
-            <div class="mb-3">
-                <label for="exampleFormControlTextarea1" class="form-label">To do:</label>
-                <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" style="height: 75px;" name="poznamky><?php echo "" . $poznamky . ""?></textarea>
-            </div>
-            <div>
-                <button type="button class="btn btn-primary" name="post">Prepísať</button>
-            </div>
-        </form>
 
-        <?php
-        $poznamky = [];
-        $result2 = mysqli_query($conn, $sql2);
-        while ($row = mysqli_fetch_assoc($result2)){
-            $poznamky[] = $row;
-        }
+        <div class="mb-3">
+          <label class="form-label">Heslo</label>
+          <input type="password" class="form-control" name="password" required>
+        </div>
 
-        if (isset($_POST["post"])){
-            $poznamky = $_POST['poznamky']
-            $sql3 = "UPDATE poznamky SET poznamka = '$poznamky' WHERE Pouzivatel_id = '$sql1'";
-            mysqli_query($conn, $sql3);
-        }
-        ?>
-    </main>
+        <button type="submit" name="login" class="btn btn-primary w-100">
+          Prihlásiť sa
+        </button>
+      </form>
+
+    <?php }else{ ?>
+
+      <!-- LOGOUT -->
+      <form method="post">
+        <button type="submit" name="logout" class="btn btn-outline-danger w-100">
+          Odhlásiť sa
+        </button>
+      </form>
+
+    <?php } ?>
+
+    <hr class="my-3">
+
+    <!-- STATUS -->
+    <div class="text-center">
+      <?php
+      if (isset($_COOKIE["logged"])) {
+        echo "Používateľ je prihlásený";
+      } else {
+        echo "Používateľ nie je prihlásený ";
+        echo "<a href='register.php'>Registrovať sa</a>";
+      }
+      ?>
+    </div>
+
+    <?php
+    include "footer.php";
+    ?>
+
+  </div>
+</div>
+
 </body>
-
 </html>
