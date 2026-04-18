@@ -13,6 +13,28 @@
 <body class="px-5 py-5 m-3 border-0 bd-example border-0">
 
     <header>
+
+        <?php
+        session_start();
+        $conn = mysqli_connect("localhost", "root", "root", "php");
+
+
+        if (isset($_POST["login"])) {
+            $name = $_POST["name"];
+            $password = $_POST["password"]; 
+            
+            $sql = "SELECT * FROM pouzivatelia WHERE Meno = '$name' AND Heslo = '$password'";
+            $result = mysqli_query($conn, $sql);
+
+            if ($row = mysqli_fetch_assoc($result)) {
+            $_SESSION["logged"] = 1;
+            $_SESSION["id"] = $row["Pouzivatel_id"];
+            $_SESSION["meno"] = $row["Meno"];
+            }
+        }
+        ?>
+        
+        <?php if (!isset($_SESSION["logged"])) { ?>
         <form method="POST">
             <div class="mb-3">
                 <label for="exampleInputtext1" class="form-label">Prihlasovacie Meno</label>
@@ -24,27 +46,22 @@
             </div>
             <button type="submit" class="btn btn-primary" name="login">Prihlásiť sa</button>
         </form>
-        <?php
-
-        /* Pripojenie na databázu*/
-        $conn = mysqli_connect("localhost", "root", "root", "php");
-
-
-        if (isset($_POST["login"])) {
-            $name = $_POST["name"];
-            $password = $_POST["password"]; 
-
-            $sql1 = "SELECT Pouzivatel_id FROM pouzivatelia WHERE Meno = '$name' AND Heslo = '$password'";
-            $result1 = mysqli_query($conn, $sql1);
-            $sql2 = "SELECT poznamka FROM poznamky WHERE Pouzivatel_id = '$sql1'";
-            $result2 = mysqli_query($conn, $sql2);
+        <?php } else { ?>
+        <form method="POST">
+            <button type="submit" class="btn btn-danger" name="logout">Odhlásiť sa</button>
+        </form>
+        <?php }
+        if (isset($_POST["logout"])) {  
+            session_destroy($_SESSION["logged"]);
         }
-
         ?>
+
     </header> <br>
     <main>
+        <?php
+        if (isset($_SESSION["logged"])){ ?>
         <div>
-            <?php echo "Vytaj" . $name . "!"?> <br> <br>
+            <?php echo "Vytaj" . $_SESSION["meno"] . "!"?> <br> <br>
         </div>
 
         <form method="POST">
@@ -53,25 +70,26 @@
                 <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" style="height: 75px;" name="poznamky"><?php echo "" . $poznamky . ""?></textarea>
             </div>
             <div>
-                <button type="button" class="btn btn-primary" name="post">Prepísať</button>
+                <button type="submit" class="btn btn-primary" name="post">Prepísať</button>
             </div>
         </form>
-
         <?php
-        $poznamky = [];
-        $result2 = mysqli_query($conn, $sql2);
-        while ($row = mysqli_fetch_assoc($result2)){
-            $poznamky[] = $row;
+            $id = $_SESSION["id"];
+            $poznamky = "";
+
+            if (isset($_POST["post"])) {
+            $poznamky = $_POST["poznamky"];
+            $sql2 = "UPDATE poznamky SET poznamka='$poznamky' WHERE Pouzivatel_id='$id'";
+            mysqli_query($conn, $sql2);
+            }
+
+            $sql3 = "SELECT * FROM poznamky WHERE Pouzivatel_id='$id'";
+            $result2 = mysqli_query($conn, $sql3);
+
+            if ($row2 = mysqli_fetch_assoc($result2)) {
+                $poznamky = $row2["poznamka"];
+            }
         }
-
-        if (isset($_POST["post"])){
-            $poznamky = $_POST['poznamky'];
-            $sql3 = "UPDATE poznamky SET poznamka = '$poznamky' WHERE Pouzivatel_id = '$sql1'";
-            mysqli_query($conn, $sql3);
-        }
-
-
-        
         ?>
     </main>
 </body>
