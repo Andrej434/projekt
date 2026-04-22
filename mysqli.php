@@ -45,7 +45,8 @@ if ($conn->query($sql) === TRUE) {
 /* TABULKA POZNAMKY */
 $sql = "CREATE TABLE IF NOT EXISTS poznamky (
     poznamka_id INT PRIMARY KEY AUTO_INCREMENT,
-    poznamka TEXT,
+    poznamka VARCHAR(255),
+    je_hotovo BOOLEAN DEFAULT 0,
     pouzivatel_id INT,
     FOREIGN KEY (pouzivatel_id) REFERENCES pouzivatelia(pouzivatel_id)
 )";
